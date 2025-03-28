@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Багыманов Руслан Маратович</title>
+    <link rel="stylesheet" href="styles/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Заголовок приложения -->
+        <header class="header">
+            <h1 class="header__title">Список задач</h1>
+        </header>
+
+        <!-- Секция для добавления новой задачи -->
+        <section class="new-task-container">
+            <div class="new-task">
+                <h2 class="new-task__title">Новая задача</h2>
+                <div class="new-task__form">
+                    <input type="text" class="new-task__input" placeholder="Название задачи...">
+                    <button class="new-task__button">+ Добавить</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Секция для списков задач -->
+        <section class="task-lists">
+            <div class="task-lists__container">
+                <!-- Список "Бэклог" -->
+                <div class="task-list">
+                    <h3 class="task-list__title task-list__title--backlog">Бэклог</h3>
+                    <ul class="task-list__items">
+                        <li class="task-list__item">Выучить JS</li>
+                        <li class="task-list__item">Выучить React</li>
+                        <li class="task-list__item">Сделать домашку</li>
+                    </ul>
+                </div>
+
+                <!-- Список "В процессе" -->
+                <div class="task-list">
+                    <h3 class="task-list__title task-list__title--inprogress">В процессе</h3>
+                    <ul class="task-list__items">
+                        <li class="task-list__item">Выпить смузи</li>
+                        <li class="task-list__item">Полить воды</li>
+                    </ul>
+                </div>
+
+                <!-- Список "Готово" -->
+                <div class="task-list">
+                    <h3 class="task-list__title task-list__title--done">Готово</h3>
+                    <ul class="task-list__items">
+                        <li class="task-list__item">Помыться маме</li>
+                        <li class="task-list__item">Погладить кота</li>
+                    </ul>
+                </div>
+
+                <!-- Список "Корзина" -->
+                <div class="task-list">
+                    <h3 class="task-list__title task-list__title--trash">Корзина</h3>
+                    <ul class="task-list__items">
+                        <li class="task-list__item">Сходить погулять</li>
+                        <li class="task-list__item">Прочитать Войну и Мир</li>
+                    </ul>
+                    <button class="clear-button">✕ Очистить</button>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>
