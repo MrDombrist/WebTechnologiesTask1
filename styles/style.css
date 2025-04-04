@@ -89,6 +89,8 @@ body {
 .task-list {
     flex: 1;
     min-width: 200px;
+    display: flex;
+    flex-direction: column;
 }
 
 .task-list__title {
@@ -119,6 +121,7 @@ body {
 
 .task-list__items {
     list-style-type: none;
+     flex-grow: 1;
 }
 
 .task-list__item {
@@ -141,3 +144,35 @@ body {
     cursor: pointer;
     font-size: 14px;
 }
+
+.board-app {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    min-height: 100vh;
+  }
+  
+  .task-lists {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    background-color: #e6f0ff;
+    padding: 20px;
+    border-radius: 5px;
+  }
+
+  .board-app__main {
+    flex-grow: 1;
+  }
+  
+  .board-app__inner {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .taskboard {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
