@@ -5,7 +5,7 @@ export default class TaskModel {
       this.#tasks = tasks;
     }
   
-    getTasks() {
+    get tasks() {
       return this.#tasks;
     }
   }

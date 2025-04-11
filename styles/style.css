@@ -176,3 +176,10 @@ body {
     gap: 20px;
     flex-wrap: wrap;
   }
+
+  .empty-list {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+    font-style: italic;
+  }

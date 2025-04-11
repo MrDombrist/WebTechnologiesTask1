@@ -1,6 +1,8 @@
-import { createElement, render } from '../framework/render.js';
+import { render } from '../framework/render.js';
+import { AbstractComponent } from '../framework/view/abstract-component.js';
 import TaskComponent from './task-component.js';
 import ClearButtonComponent from './clear-button-component.js';
+import EmptyListComponent from './empty-list-component.js'; // Новый импорт
 import { TaskStatus } from '../const.js';
 
 function createTaskListTemplate(title, type) {
@@ -13,39 +15,45 @@ function createTaskListTemplate(title, type) {
   `;
 }
 
-export default class TaskListComponent {
+export default class TaskListComponent extends AbstractComponent {
+  #title = null;
+  #type = null;
+  #tasks = null;
+  #clearButtonComponent = null;
+
   constructor(title, type, tasks) {
-    this.title = title;
-    this.type = type;
-    this.tasks = tasks;
-    this.clearButtonComponent = null;
+    super();
+    this.#title = title;
+    this.#type = type;
+    this.#tasks = tasks;
   }
 
-  getTemplate() {
-    return createTaskListTemplate(this.title, this.type);
+  get template() {
+    return createTaskListTemplate(this.#title, this.#type);
   }
 
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-      
-      const listElement = this.element.querySelector('.task-list__items');
-      this.tasks.forEach(task => {
-        const taskComponent = new TaskComponent(task);
-        render(taskComponent, listElement);
-      });
-
-      // Добавляем кнопку очистки для корзины
-      if (this.type === TaskStatus.TRASH) {
-        const clearButtonContainer = this.element.querySelector('.clear-button-container');
-        this.clearButtonComponent = new ClearButtonComponent();
-        render(this.clearButtonComponent, clearButtonContainer);
-      }
+  get element() {
+    if (!super.element) {
+      return super.element;
     }
-    return this.element;
-  }
+    
+    const listElement = super.element.querySelector('.task-list__items');
+    
+    // НОВАЯ ЛОГИКА: Проверка на пустые задачи
+    if (this.#tasks.length === 0) {
+      render(new EmptyListComponent(), listElement);
+    } else {
+      this.#tasks.forEach(task => {
+        render(new TaskComponent(task), listElement);
+      });
+    }
 
-  removeElement() {
-    this.element = null;
+    if (this.#type === TaskStatus.TRASH) {
+      const clearButtonContainer = super.element.querySelector('.clear-button-container');
+      this.#clearButtonComponent = new ClearButtonComponent();
+      render(this.#clearButtonComponent, clearButtonContainer);
+    }
+    
+    return super.element;
   }
 }
