@@ -11,6 +11,7 @@ export default class TasksBoardPresenter {
   #boardTasks = [];
   #taskListComponents = {};
   #clearButtonComponent = null;
+  #draggedTask = null;
 
   constructor(taskboardContainer, taskModel) {
     this.#taskboardContainer = taskboardContainer;
@@ -50,6 +51,16 @@ export default class TasksBoardPresenter {
     this.#renderBoard();
   }
   
+  // Новый обработчик начала перетаскивания
+  #handleDragStart = (task) => {
+    this.#draggedTask = task;
+  }
+  
+  // Новый обработчик события drop
+  #handleTaskDrop = (taskId, newStatus, targetTaskId, position) => {
+    this.#taskModel.updateTaskStatus(taskId, newStatus, targetTaskId, position);
+  }
+  
   // Очистка доски
   #clearBoard() {
     this.#taskboardContainer.innerHTML = '';
@@ -66,7 +77,9 @@ export default class TasksBoardPresenter {
       const taskListComponent = new TaskListComponent(
         TaskStatusLabels[status],
         status,
-        tasks
+        tasks,
+        this.#handleTaskDrop,  // Передаем новый обработчик drop
+        this.#handleDragStart  // Передаем новый обработчик dragStart
       );
 
       this.#taskListComponents[status] = taskListComponent;
@@ -99,7 +112,7 @@ export default class TasksBoardPresenter {
   }
 
   #renderTask(task, container) {
-    const taskComponent = new TaskComponent(task);
+    const taskComponent = new TaskComponent(task, this.#handleDragStart);
     render(taskComponent, container);
   }
 }
