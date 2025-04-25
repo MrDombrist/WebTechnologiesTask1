@@ -12,7 +12,13 @@ const taskboardContainer = document.querySelector('.taskboard');
 const taskModel = new TaskModel(tasks);
 const tasksBoardPresenter = new TasksBoardPresenter(taskboardContainer, taskModel);
 
-render(new HeaderComponent(), bodyContainer, RenderPosition.BEFOREBEGIN);
-render(new FormAddTaskComponent(), formContainer);
-
+// Инициализируем презентер
 tasksBoardPresenter.init();
+
+// Создаем форму добавления задачи с передачей callback для создания задачи
+const formAddTaskComponent = new FormAddTaskComponent((title) => {
+  tasksBoardPresenter.createTask(title);
+});
+
+render(new HeaderComponent(), bodyContainer, RenderPosition.BEFOREBEGIN);
+render(formAddTaskComponent, formContainer);

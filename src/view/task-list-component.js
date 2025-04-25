@@ -2,7 +2,7 @@ import { render } from '../framework/render.js';
 import { AbstractComponent } from '../framework/view/abstract-component.js';
 import TaskComponent from './task-component.js';
 import ClearButtonComponent from './clear-button-component.js';
-import EmptyListComponent from './empty-list-component.js'; // Новый импорт
+import EmptyListComponent from './empty-list-component.js'; 
 import { TaskStatus } from '../const.js';
 
 function createTaskListTemplate(title, type) {

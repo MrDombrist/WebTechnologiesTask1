@@ -15,7 +15,38 @@ function createFormAddTaskComponentTemplate() {
 }
 
 export default class FormAddTaskComponent extends AbstractComponent {
+    #handleTaskAdd = null;
+    
+    constructor(handleTaskAdd) {
+        super();
+        this.#handleTaskAdd = handleTaskAdd;
+        this._setInnerHandlers();
+    }
+    
     get template() {
       return createFormAddTaskComponentTemplate();
+    }
+    
+    _setInnerHandlers() {
+        this.element.querySelector('.new-task__button').addEventListener('click', this.#formSubmitHandler);
+        this.element.querySelector('.new-task__input').addEventListener('keydown', this.#inputKeydownHandler);
+    }
+    
+    #formSubmitHandler = (evt) => {
+        evt.preventDefault();
+        const input = this.element.querySelector('.new-task__input');
+        const title = input.value.trim();
+        
+        if (title) {
+            this.#handleTaskAdd(title);
+            input.value = '';
+        }
+    }
+    
+    #inputKeydownHandler = (evt) => {
+        if (evt.key === 'Enter') {
+            evt.preventDefault();
+            this.#formSubmitHandler(evt);
+        }
     }
 }
