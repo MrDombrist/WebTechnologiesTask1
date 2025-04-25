@@ -19,7 +19,7 @@ export default class TaskListComponent extends AbstractComponent {
   #title = null;
   #type = null;
   #tasks = null;
-  #clearButtonComponent = null;
+  #tasksRendered = false; // Флаг, чтобы отслеживать, были ли задачи уже отрендерены
 
   constructor(title, type, tasks) {
     super();
@@ -33,27 +33,30 @@ export default class TaskListComponent extends AbstractComponent {
   }
 
   get element() {
-    if (!super.element) {
-      return super.element;
+    const element = super.element;
+    
+    // Задачи рендерятся только один раз
+    if (!this.#tasksRendered && element) {
+      this.#tasksRendered = true;
+      const listElement = element.querySelector('.task-list__items');
+      
+      if (this.#tasks.length === 0) {
+        render(new EmptyListComponent(), listElement);
+      } else {
+        this.#tasks.forEach(task => {
+          render(new TaskComponent(task), listElement);
+        });
+      }
     }
     
-    const listElement = super.element.querySelector('.task-list__items');
-    
-    // НОВАЯ ЛОГИКА: Проверка на пустые задачи
-    if (this.#tasks.length === 0) {
-      render(new EmptyListComponent(), listElement);
-    } else {
-      this.#tasks.forEach(task => {
-        render(new TaskComponent(task), listElement);
-      });
-    }
-
-    if (this.#type === TaskStatus.TRASH) {
-      const clearButtonContainer = super.element.querySelector('.clear-button-container');
-      this.#clearButtonComponent = new ClearButtonComponent();
-      render(this.#clearButtonComponent, clearButtonContainer);
-    }
-    
-    return super.element;
+    return element;
+  }
+  
+  getTasksContainer() {
+    return this.element.querySelector('.task-list__items');
+  }
+  
+  getClearButtonContainer() {
+    return this.element.querySelector('.clear-button-container');
   }
 }
