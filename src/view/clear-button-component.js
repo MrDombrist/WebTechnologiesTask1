@@ -1,7 +1,7 @@
 import { AbstractComponent } from '../framework/view/abstract-component.js';
 
 function createClearButtonTemplate(isDisabled = false) {
-  return `<button class="clear-button" ${isDisabled ? 'disabled' : ''}>✕ Очистить</button>`;
+  return `<button class="clear-button ${isDisabled ? 'disabled' : ''}" ${isDisabled ? 'disabled' : ''}>✕ Очистить</button>`;
 }
 
 export default class ClearButtonComponent extends AbstractComponent {
@@ -25,11 +25,19 @@ export default class ClearButtonComponent extends AbstractComponent {
   
   #clearButtonClickHandler = (evt) => {
     evt.preventDefault();
-    this.#handleClearButtonClick();
+    if (!this.#isDisabled) {
+      this.#handleClearButtonClick();
+    }
   }
   
   setDisabled(isDisabled) {
     this.#isDisabled = isDisabled;
     this.element.disabled = isDisabled;
+    
+    if (isDisabled) {
+      this.element.classList.add('disabled');
+    } else {
+      this.element.classList.remove('disabled');
+    }
   }
 }
