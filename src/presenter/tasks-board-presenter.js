@@ -1,54 +1,68 @@
 import TaskListComponent from '../view/task-list-component.js';
 import {render} from '../framework/render.js';
-import {TaskStatus, TaskStatusLabels} from '../const.js';
+import {TaskStatus, TaskStatusLabels, UserAction, UpdateType} from '../const.js';
 import TaskComponent from '../view/task-component.js';
 import EmptyListComponent from '../view/empty-list-component.js';
 import ClearButtonComponent from '../view/clear-button-component.js';
+import LoadingViewComponent from '../view/loading-view-component.js';
 
 export default class TasksBoardPresenter {
   #taskboardContainer = null;
-  #taskModel = null;
+  #tasksModel = null;
   #boardTasks = [];
   #taskListComponents = {};
   #clearButtonComponent = null;
   #draggedTask = null;
+  #isLoading = true;
+  #loadingComponent = new LoadingViewComponent();
 
-  constructor(taskboardContainer, taskModel) {
+  constructor(taskboardContainer, tasksModel) {
     this.#taskboardContainer = taskboardContainer;
-    this.#taskModel = taskModel;
+    this.#tasksModel = tasksModel;
     
     // Подписываемся на изменения в модели
-    this.#taskModel.addObserver(this.#handleModelChange);
+    this.#tasksModel.addObserver(this.#handleModelEvent);
   }
   
   get tasks() {
     return this.#boardTasks;
   }
 
-  init() {
-    this.#boardTasks = [...this.#taskModel.tasks];
-    this.#renderBoard();
+  async init() {
+    this.#renderLoading();
+    await this.#tasksModel.init();
   }
+  
+  #handleModelEvent = (eventType, payload) => {
+    switch (eventType) {
+      case UserAction.ADD_TASK:
+        this.#clearBoard();
+        this.#renderBoard();
+        break;
+      case UserAction.UPDATE_TASK:
+        this.#clearBoard();
+        this.#renderBoard();
+        break;
+      case UserAction.DELETE_TASK:
+        this.#clearBoard();
+        this.#renderBoard();
+        break;
+      case UpdateType.INIT:
+        this.#isLoading = false;
+        this.#boardTasks = [...this.#tasksModel.tasks];
+        this.#clearBoard();
+        this.#renderBoard();
+        break;
+    }
+  };
   
   // Метод для создания новой задачи
-  createTask(title) {
-    // Импортируем функцию генерации ID
-    import('../utils.js').then(({generateID}) => {
-      const newTask = {
-        id: generateID(),
-        title,
-        status: TaskStatus.BACKLOG
-      };
-      
-      this.#taskModel.addTask(newTask);
-    });
-  }
-  
-  // Обработчик события изменения модели
-  #handleModelChange = (tasks) => {
-    this.#boardTasks = [...tasks];
-    this.#clearBoard();
-    this.#renderBoard();
+  async createTask(title) {
+    try {
+      await this.#tasksModel.addTask(title);
+    } catch (err) {
+      console.error('Ошибка при создании задачи:', err);
+    }
   }
   
   // Новый обработчик начала перетаскивания
@@ -57,12 +71,25 @@ export default class TasksBoardPresenter {
   }
   
   // Новый обработчик события drop
-  #handleTaskDrop = (taskId, newStatus, targetTaskId, position) => {
-    this.#taskModel.updateTaskStatus(taskId, newStatus, targetTaskId, position);
+  #handleTaskDrop = async (taskId, newStatus, targetTaskId, position) => {
+    try {
+      await this.#tasksModel.updateTaskStatus(taskId, newStatus, targetTaskId, position);
+    } catch (err) {
+      console.error('Ошибка при перемещении задачи:', err);
+    }
+  }
+  
+  // Отображение компонента загрузки
+  #renderLoading() {
+    render(this.#loadingComponent, this.#taskboardContainer);
   }
   
   // Очистка доски
   #clearBoard() {
+    if (this.#isLoading) {
+      this.#loadingComponent.removeElement();
+    }
+    
     this.#taskboardContainer.innerHTML = '';
     Object.values(this.#taskListComponents).forEach((component) => {
       component.removeElement();
@@ -72,14 +99,19 @@ export default class TasksBoardPresenter {
   
   // Отрисовка доски
   #renderBoard() {
+    if (this.#isLoading) {
+      this.#renderLoading();
+      return;
+    }
+
     Object.values(TaskStatus).forEach((status) => {
       const tasks = this.#boardTasks.filter(task => task.status === status);
       const taskListComponent = new TaskListComponent(
         TaskStatusLabels[status],
         status,
         tasks,
-        this.#handleTaskDrop,  // Передаем новый обработчик drop
-        this.#handleDragStart  // Передаем новый обработчик dragStart
+        this.#handleTaskDrop,
+        this.#handleDragStart
       );
 
       this.#taskListComponents[status] = taskListComponent;
@@ -104,8 +136,12 @@ export default class TasksBoardPresenter {
       this.#clearButtonComponent.removeElement();
     }
     
-    this.#clearButtonComponent = new ClearButtonComponent(() => {
-      this.#taskModel.clearTrash();
+    this.#clearButtonComponent = new ClearButtonComponent(async () => {
+      try {
+        await this.#tasksModel.clearBasketTasks();
+      } catch (err) {
+        console.error('Ошибка при очистке корзины:', err);
+      }
     }, !hasTrashTasks);
     
     render(this.#clearButtonComponent, container);
