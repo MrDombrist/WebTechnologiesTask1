@@ -24,6 +24,8 @@ export default class TaskListComponent extends AbstractComponent {
   #dragStartHandler = null;
   #currentDropTarget = null;
   #currentDropPosition = null;
+  #taskComponents = new Set();
+  #element = null;
 
   constructor(title, type, tasks, onDropHandler, dragStartHandler) {
     super();
@@ -37,27 +39,30 @@ export default class TaskListComponent extends AbstractComponent {
   get template() {
     return createTaskListTemplate(this.#title, this.#type);
   }
-
+  
   get element() {
-    const element = super.element;
-    
-    if (!this.#tasksRendered && element) {
-      this.#tasksRendered = true;
+    if (!this.#element) {
+      this.#element = super.element;
       this.#renderTasks();
       this._setInnerHandlers();
     }
-    
-    return element;
+    return this.#element;
   }
-  
+
   #renderTasks() {
     const listElement = this.getTasksContainer();
     
+    if (!listElement) return;
+
     if (this.#tasks.length === 0) {
-      render(new EmptyListComponent(), listElement);
+      const emptyComponent = new EmptyListComponent();
+      render(emptyComponent, listElement);
+      this.#taskComponents.add(emptyComponent);
     } else {
       this.#tasks.forEach(task => {
-        render(new TaskComponent(task, this.#dragStartHandler), listElement);
+        const taskComponent = new TaskComponent(task, this.#dragStartHandler);
+        render(taskComponent, listElement);
+        this.#taskComponents.add(taskComponent);
       });
     }
   }
@@ -65,6 +70,8 @@ export default class TaskListComponent extends AbstractComponent {
   _setInnerHandlers() {
     if (this.element) {
       const listContainer = this.getTasksContainer();
+      if (!listContainer) return;
+      
       listContainer.addEventListener('dragover', this.#onDragOver);
       listContainer.addEventListener('dragenter', this.#onDragEnter);
       listContainer.addEventListener('dragleave', this.#onDragLeave);
@@ -161,5 +168,30 @@ export default class TaskListComponent extends AbstractComponent {
   
   getClearButtonContainer() {
     return this.element.querySelector('.clear-button-container');
+  }
+  
+  removeElement() {
+    // Удаляем обработчики событий
+    const listContainer = this.getTasksContainer();
+    if (listContainer) {
+      listContainer.removeEventListener('dragover', this.#onDragOver);
+      listContainer.removeEventListener('dragenter', this.#onDragEnter);
+      listContainer.removeEventListener('dragleave', this.#onDragLeave);
+      listContainer.removeEventListener('drop', this.#onDrop);
+    }
+    
+    // Очищаем вложенные компоненты перед удалением
+    this.#taskComponents.forEach((component) => {
+      if (component && typeof component.removeElement === 'function') {
+        component.removeElement();
+      }
+    });
+    this.#taskComponents.clear();
+    
+    // Удаляем сам элемент
+    if (this.#element) {
+      this.#element.remove();
+      this.#element = null;
+    }
   }
 }

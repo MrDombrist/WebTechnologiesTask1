@@ -35,7 +35,7 @@ export default class TasksModel extends Observable {
     
     try {
       const createdTask = await this.#tasksApiService.addTask(newTask);
-      this.#boardtasks.push(createdTask);
+      this.#boardtasks = [...this.#boardtasks, createdTask];
       this._notify(UserAction.ADD_TASK, createdTask);
       return createdTask;
     } catch (err) {
@@ -60,7 +60,9 @@ export default class TasksModel extends Observable {
       const response = await this.#tasksApiService.updateTask(updatedTask);
       
       // Создаем новый массив без перемещаемой задачи
-      let updatedTasks = this.#boardtasks.filter((task) => task.id !== taskId);
+      let updatedTasks = [...this.#boardtasks];
+      // Сначала удаляем задачу из старой позиции
+      updatedTasks = updatedTasks.filter((task) => task.id !== taskId);
       
       if (targetTaskId === null || position === 'append') {
         // Просто добавляем в конец списка
@@ -82,8 +84,12 @@ export default class TasksModel extends Observable {
         }
       }
       
+      // Обновляем локальную копию задач
       this.#boardtasks = updatedTasks;
+      
+      // Уведомляем презентеры об изменении
       this._notify(UserAction.UPDATE_TASK, response);
+      
       return response;
     } catch (err) {
       console.error('Ошибка при обновлении задачи на сервере:', err);
@@ -95,15 +101,21 @@ export default class TasksModel extends Observable {
     try {
       const trashTasks = this.#boardtasks.filter((task) => task.status === 'trash');
       
+      if (trashTasks.length === 0) {
+        return true;
+      }
+      
       // Параллельное удаление всех задач с сервера
       await Promise.all(
         trashTasks.map((task) => this.#tasksApiService.deleteTask(task.id))
       );
       
-      // Обновляем локальную копию задач
-      this.#boardtasks = this.#boardtasks.filter((task) => task.status !== 'trash');
+      // Обновляем локальную копию задач, создавая новый массив
+      this.#boardtasks = [...this.#boardtasks.filter((task) => task.status !== 'trash')];
       
+      // Уведомляем презентеры об изменении
       this._notify(UserAction.DELETE_TASK);
+      
       return true;
     } catch (err) {
       console.error('Ошибка при удалении задач из корзины:', err);

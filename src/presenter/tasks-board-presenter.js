@@ -1,5 +1,5 @@
 import TaskListComponent from '../view/task-list-component.js';
-import {render} from '../framework/render.js';
+import {render, RenderPosition} from '../framework/render.js';
 import {TaskStatus, TaskStatusLabels, UserAction, UpdateType} from '../const.js';
 import TaskComponent from '../view/task-component.js';
 import EmptyListComponent from '../view/empty-list-component.js';
@@ -34,22 +34,28 @@ export default class TasksBoardPresenter {
   }
   
   #handleModelEvent = (eventType, payload) => {
+    // Обновляем локальную копию задач из модели
+    this.#boardTasks = [...this.#tasksModel.tasks];
+    
     switch (eventType) {
       case UserAction.ADD_TASK:
+        // При добавлении задачи полностью перерисовываем доску
         this.#clearBoard();
         this.#renderBoard();
         break;
       case UserAction.UPDATE_TASK:
+        // При любом обновлении задачи перерисовываем все секции
+        // Это гарантирует, что ничего не пропадет
         this.#clearBoard();
         this.#renderBoard();
         break;
       case UserAction.DELETE_TASK:
+        // При удалении задачи перерисовываем все секции
         this.#clearBoard();
         this.#renderBoard();
         break;
       case UpdateType.INIT:
         this.#isLoading = false;
-        this.#boardTasks = [...this.#tasksModel.tasks];
         this.#clearBoard();
         this.#renderBoard();
         break;
@@ -65,12 +71,12 @@ export default class TasksBoardPresenter {
     }
   }
   
-  // Новый обработчик начала перетаскивания
+  // Обработчик начала перетаскивания
   #handleDragStart = (task) => {
-    this.#draggedTask = task;
+    this.#draggedTask = {...task}; // Создаем копию для сравнения
   }
   
-  // Новый обработчик события drop
+  // Обработчик события drop
   #handleTaskDrop = async (taskId, newStatus, targetTaskId, position) => {
     try {
       await this.#tasksModel.updateTaskStatus(taskId, newStatus, targetTaskId, position);
@@ -90,11 +96,22 @@ export default class TasksBoardPresenter {
       this.#loadingComponent.removeElement();
     }
     
-    this.#taskboardContainer.innerHTML = '';
+    // Удаляем все компоненты из памяти перед очисткой DOM
     Object.values(this.#taskListComponents).forEach((component) => {
-      component.removeElement();
+      if (component && typeof component.removeElement === 'function') {
+        component.removeElement();
+      }
     });
+    
+    // Очищаем DOM
+    this.#taskboardContainer.innerHTML = '';
+    
+    // Очищаем ссылки на компоненты
     this.#taskListComponents = {};
+    if (this.#clearButtonComponent) {
+      this.#clearButtonComponent.removeElement();
+      this.#clearButtonComponent = null;
+    }
   }
   
   // Отрисовка доски
@@ -104,6 +121,7 @@ export default class TasksBoardPresenter {
       return;
     }
 
+    // Отрисовываем все списки задач
     Object.values(TaskStatus).forEach((status) => {
       const tasks = this.#boardTasks.filter(task => task.status === status);
       const taskListComponent = new TaskListComponent(
@@ -145,10 +163,5 @@ export default class TasksBoardPresenter {
     }, !hasTrashTasks);
     
     render(this.#clearButtonComponent, container);
-  }
-
-  #renderTask(task, container) {
-    const taskComponent = new TaskComponent(task, this.#handleDragStart);
-    render(taskComponent, container);
   }
 }

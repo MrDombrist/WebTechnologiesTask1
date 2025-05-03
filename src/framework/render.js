@@ -22,8 +22,36 @@ function render(component, container, place = RenderPosition.BEFOREEND) {
     throw new Error("Container element doesn't exist");
   }
 
-  // Исправлено здесь: component.element вместо component.getElement()
   container.insertAdjacentElement(place, component.element);
 }
 
-export { RenderPosition, createElement, render };
+function replace(newComponent, oldComponent) {
+  if (!(newComponent instanceof AbstractComponent && oldComponent instanceof AbstractComponent)) {
+    throw new Error('Can replace only components');
+  }
+
+  const newElement = newComponent.element;
+  const oldElement = oldComponent.element;
+
+  const parent = oldElement.parentElement;
+
+  if (parent === null) {
+    throw new Error('Parent element doesn\'t exist');
+  }
+
+  parent.replaceChild(newElement, oldElement);
+}
+
+function remove(component) {
+  if (component === null) {
+    return;
+  }
+
+  if (!(component instanceof AbstractComponent)) {
+    throw new Error('Can remove only components');
+  }
+
+  component.removeElement();
+}
+
+export { RenderPosition, createElement, render, replace, remove };

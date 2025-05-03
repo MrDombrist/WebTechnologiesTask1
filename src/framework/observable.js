@@ -1,6 +1,7 @@
 export default class Observable {
     #observers = new Set();
   
+    
     addObserver(observer) {
       this.#observers.add(observer);
     }

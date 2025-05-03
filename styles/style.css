@@ -183,3 +183,13 @@ body {
     color: #666;
     font-style: italic;
   }
+
+  .new-task__button {
+    /* остальные стили */
+    cursor: pointer !important;
+}
+
+.clear-button {
+    /* остальные стили */
+    cursor: pointer !important;
+}
